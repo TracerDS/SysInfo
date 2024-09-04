@@ -4,6 +4,7 @@
 
 #include <Shobjidl.h>
 #include <comdef.h>
+#include <cassert>
 
 #pragma comment(lib, "wbemuuid.lib")
 

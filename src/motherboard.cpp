@@ -269,14 +269,15 @@ namespace SysInfo::Motherboard {
     const BaseboardType& MotherboardInfo::GetBaseboardType()
         const noexcept { return m_boardType; }
 
-    EXPORT FUTURE(MotherboardInfo) GetMotherboardInfo() noexcept {
-        static MotherboardInfo moboInfo;
-        if (moboInfo.IsInitialized())
-            return FUTURE_FUNC(moboInfo);
-
 #ifdef SYSINFO_USE_FUTURE
-        return std::async(std::launch::async, [] {
+    EXPORT
 #endif
+    std::future<MotherboardInfo> GetMotherboardInfoFuture() noexcept {
+        static MotherboardInfo moboInfo;
+        return std::async(std::launch::async, []() -> MotherboardInfo {
+            if (moboInfo.IsInitialized())
+                return moboInfo;
+
             auto smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, nullptr, 0);
 
             auto procHeap = GetProcessHeap();
@@ -524,8 +525,16 @@ namespace SysInfo::Motherboard {
                 featureFlags, boardType
             );
             return moboInfo;
-#ifdef SYSINFO_USE_FUTURE
         });
+    }
+
+    EXPORT FUTURE(MotherboardInfo) GetMotherboardInfo() noexcept {
+#ifdef SYSINFO_USE_FUTURE
+        return GetMotherboardInfoFuture();
+#else
+        auto info = GetMotherboardInfoFuture();
+        info.wait();
+        return info.get();
 #endif
     }
 }

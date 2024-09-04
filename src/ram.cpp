@@ -64,15 +64,15 @@ namespace SysInfo::RAM {
     const std::string& RAMStick::GetBankName() const noexcept { return m_bankName; }
     const std::string& RAMStick::GetDeviceLocator() const noexcept { return m_deviceLocator; }
 
-    
-    EXPORT FUTURE(RAMInfo) GetRAMInfo() noexcept {
-        static RAMInfo ramInfo;
-        if (ramInfo.IsInitialized())
-            return FUTURE_FUNC(ramInfo);
-
 #ifdef SYSINFO_USE_FUTURE
-        return std::async(std::launch::async, [] {
+    EXPORT
 #endif
+    std::future<RAMInfo> GetRAMInfoFuture() noexcept {
+        static RAMInfo ramInfo;
+        return std::async(std::launch::async, [] {
+            if (ramInfo.IsInitialized())
+                return ramInfo;
+
             COM::COMWrapper com;
             com.Connect();
             auto results = com.Query("SELECT * FROM Win32_PhysicalMemory");
@@ -114,8 +114,16 @@ namespace SysInfo::RAM {
 
             ramInfo = RAMInfo(sticks);
             return ramInfo;
-#ifdef SYSINFO_USE_FUTURE
         });
+    }
+
+    EXPORT FUTURE(RAMInfo) GetRAMInfo() noexcept {
+#ifdef SYSINFO_USE_FUTURE
+        return GetRAMInfoFuture();
+#else
+        auto info = GetRAMInfoFuture();
+        info.wait();
+        return info.get();
 #endif
     }
 }

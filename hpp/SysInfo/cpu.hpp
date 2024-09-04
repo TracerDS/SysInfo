@@ -74,5 +74,8 @@ namespace SysInfo::CPU {
     };
 #pragma warning(pop)
 
+#ifdef SYSINFO_USE_FUTURE
+    EXPORT std::future<CPUInfo> GetCPUInfoFuture() noexcept;
+#endif
     EXPORT FUTURE(CPUInfo) GetCPUInfo() noexcept;
 }

@@ -103,15 +103,15 @@ namespace SysInfo::CPU {
                 return "UNKNOWN";
         }
     }
-
-    EXPORT FUTURE(CPUInfo) GetCPUInfo() noexcept {
-        static CPUInfo cpuInfo;
-        if (cpuInfo.IsInitialized())
-            return FUTURE_FUNC(cpuInfo);
-
 #ifdef SYSINFO_USE_FUTURE
-        return std::async(std::launch::async, [] {
+    EXPORT
 #endif
+    std::future<CPUInfo> GetCPUInfoFuture() noexcept {
+        static CPUInfo cpuInfo;
+        return std::async(std::launch::async, []() -> CPUInfo {
+            if (cpuInfo.IsInitialized())
+                return cpuInfo;
+
             SYSTEM_INFO sysInfo;
             GetSystemInfo(&sysInfo);
 
@@ -409,8 +409,16 @@ namespace SysInfo::CPU {
             );
 
             return cpuInfo;
-#ifdef SYSINFO_USE_FUTURE
         });
+    }
+
+    EXPORT FUTURE(CPUInfo) GetCPUInfo() noexcept {
+#ifdef SYSINFO_USE_FUTURE
+        return GetCPUInfoFuture();
+#else
+        auto info = GetCPUInfoFuture();
+        info.wait();
+        return info.get();
 #endif
     }
 }

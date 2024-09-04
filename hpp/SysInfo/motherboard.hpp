@@ -175,5 +175,8 @@ namespace SysInfo::Motherboard {
     };
 #pragma warning(pop)
 
+#ifdef SYSINFO_USE_FUTURE
+    EXPORT std::future<MotherboardInfo> GetMotherboardInfoFuture() noexcept;
+#endif
     EXPORT FUTURE(MotherboardInfo) GetMotherboardInfo() noexcept;
 }

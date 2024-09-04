@@ -69,5 +69,8 @@ namespace SysInfo::RAM {
     };
 #pragma warning(pop)
 
+#ifdef SYSINFO_USE_FUTURE
+    EXPORT std::future<RAMInfo> GetRAMInfoFuture() noexcept;
+#endif
     EXPORT FUTURE(RAMInfo) GetRAMInfo() noexcept;
 }

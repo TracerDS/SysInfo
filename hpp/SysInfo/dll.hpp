@@ -5,9 +5,9 @@
 #else
 #	define EXPORT __declspec(dllimport)
 #endif
+#include <future>
 
 #ifdef SYSINFO_USE_FUTURE
-#	include <future>
 #	define FUTURE(x) std::future<x>
 #	define FUTURE_FUNC(x) std::async(std::launch::async, []{ return x; })
 #else
@@ -18,7 +18,7 @@
 namespace SysInfo {
 	class EXPORT StructInit {
 	public:
-		virtual bool IsInitialized() const noexcept;
+		bool IsInitialized() const noexcept;
 	protected:
 		bool m_initialized;
 	};

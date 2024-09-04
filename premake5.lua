@@ -1,6 +1,8 @@
-buildpath = function(p) return '%{wks.location}/../Bin/'..p..'/' end
-copy = function(p) return '{COPY} %{cfg.buildtarget.abspath} "%{wks.location}../Bin/'..p..'/"' end
 SolutionName = 'SysInfo'
+rootpath = '%{wks.location}/../'
+buildpath = function(p) return rootpath..'Bin/'..p..'/' end
+objpath = rootpath..'Build/obj/%{cfg.platform}/%{cfg.buildcfg}'
+copy = function(p) return '{COPY} %{cfg.buildtarget.abspath} "'..rootpath..p..'/"' end
 
 workspace ( SolutionName )
     configurations { "Debug", "Release" }
@@ -15,6 +17,9 @@ workspace ( SolutionName )
     includedirs {
         'hpp'
     }
+
+    filter {}
+        defines { 'SYSINFO_BUILD' }
 
 	filter 'platforms:x86'
 		architecture 'x86'
@@ -52,9 +57,10 @@ workspace ( SolutionName )
         targetname ( SolutionName )
         targetdir(buildpath('.'))
         debugdir(buildpath('.'))
+        --objdir(objpath)
         
-        pchheader "src/pch.hpp"
-        pchsource "src/pch.cpp"
+        pchheader "pch.hpp"
+        pchsource "pch.cpp"
 
         vpaths {
             ['Headers/*'] = { 'hpp/SysInfo/**.hpp', 'src/**.hpp' },
