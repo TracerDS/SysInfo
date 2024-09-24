@@ -8,7 +8,7 @@
 namespace SysInfo::CPU {
 #pragma warning(push)
 #pragma warning(disable: 4251)
-    class EXPORT CPUInfo : public StructInit {
+    class EXPORT CPUInfo : public Core::StructInit {
     public:
         enum class Architecture {
             UNKNOWN,
@@ -25,7 +25,6 @@ namespace SysInfo::CPU {
             DUAL,
         };
 
-        CPUInfo() noexcept;
         CPUInfo(
             const Architecture& architecture,
             const ProcType& procType,
@@ -74,8 +73,6 @@ namespace SysInfo::CPU {
     };
 #pragma warning(pop)
 
-#ifdef SYSINFO_USE_FUTURE
     EXPORT std::future<CPUInfo> GetCPUInfoFuture() noexcept;
-#endif
     EXPORT FUTURE(CPUInfo) GetCPUInfo() noexcept;
 }

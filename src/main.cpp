@@ -2,19 +2,25 @@
 #include <SysInfo/sysinfo.hpp>
 #include <SysInfo/misc.hpp>
 
+#include <SysInfo/os.hpp>
+
 BOOL WINAPI DllMain (
 	HINSTANCE instance,
 	DWORD reason,
 	LPVOID reserved
 ) {
-	// Perform actions based on the reason for calling.
 	switch (reason) {
 		case DLL_PROCESS_ATTACH:
 			// Initialize once for each new process.
 			// Return FALSE to fail DLL load.
-			//SysInfo::CPU::GetCPUInfo();
-			//SysInfo::Motherboard::GetMotherboardInfo();
-			//SysInfo::RAM::GetRAMInfo();
+
+#ifdef SYSINFO_PRE_INIT
+			SysInfo::CPU::GetCPUInfoFuture();
+			SysInfo::RAM::GetRAMInfoFuture();
+			SysInfo::Motherboard::GetMotherboardInfoFuture();
+			SysInfo::Disk::GetDiskInfoFuture();
+			SysInfo::OS::GetOSInfoFuture();
+#endif
 			break;
 
 		case DLL_THREAD_ATTACH:
@@ -33,51 +39,67 @@ BOOL WINAPI DllMain (
 			// Perform any necessary cleanup.
 			break;
 	}
-	return TRUE;  // Successful DLL_PROCESS_ATTACH.
+	return true;
 }
 
 int main() {
+	SysInfo::OS::GetOSInfo();
+	return 1;
+	std::vector<std::string> diskInfo;
+	if (true) {
+		auto info = SysInfo::Disk::GetDiskInfo();
+		for (const auto& disk : info.GetDisks()) {
+			std::string data;
+			data += "Letter: " + disk.GetLetter() + "\n";
+			data += "VolumeName: " + disk.GetVolumeName() + "\n";
+			data += "FileSystem: " + disk.GetFileSystem() + "\n";
+			data += "SerialNumber: " + disk.GetSerial() + "\n";
+			data += "Type: " + disk.DiskTypeToString(disk.GetType()) + "\n";
+			data += "FreeBytes: " + std::to_string(disk.GetFreeBytes()) + "\n";
+			data += "TotalBytes: " + std::to_string(disk.GetTotalBytes()) + "\n";
+			data += "FreeBytesAvailable: " + std::to_string(disk.GetFreeBytesAvailable()) + "\n";
+
+			diskInfo.push_back(data);
+		}
+	}
+
+	std::string moboInfo;
 	if (true) {
 		auto info = SysInfo::Motherboard::GetMotherboardInfo();
-		std::string data;
 
-		data += "Vendor: " + info.GetVendor() + "\n";
-		data += "Manufacturer: " + info.GetManufacturer() + "\n";
-		data += "Family: " + info.GetFamily() + "\n";
-		data += "Product name: " + info.GetProductName() + "\n";
-		data += "Release date: " + info.GetReleaseDate() + "\n";
-		data += "BIOS version: " + info.GetBiosVersion() + "\n";
-		data += "Version: " + info.GetVersion() + "\n";
-		data += "SKU Number: " + info.GetSKUNumber() + "\n";
-		data += "Serial: " + info.GetSerial() + "\n";
-		data += "WakeUpType: " + SysInfo::Motherboard::MotherboardInfo::WakeUpTypeToString(
+		moboInfo += "Vendor: " + info.GetVendor() + "\n";
+		moboInfo += "Manufacturer: " + info.GetManufacturer() + "\n";
+		moboInfo += "Family: " + info.GetFamily() + "\n";
+		moboInfo += "Product name: " + info.GetProductName() + "\n";
+		moboInfo += "Release date: " + info.GetReleaseDate() + "\n";
+		moboInfo += "BIOS version: " + info.GetBiosVersion() + "\n";
+		moboInfo += "Version: " + info.GetVersion() + "\n";
+		moboInfo += "SKU Number: " + info.GetSKUNumber() + "\n";
+		moboInfo += "Serial: " + info.GetSerial() + "\n";
+		moboInfo += "WakeUpType: " + SysInfo::Motherboard::MotherboardInfo::WakeUpTypeToString(
 			info.GetWakeUpType()) + "\n";
-		data += "BaseboardFlags: " + std::to_string(info.GetBaseboardFlags()) + "\n";
-		data += "BaseboardType: " + SysInfo::Motherboard::MotherboardInfo::BaseboardTypeToString(
+		moboInfo += "BaseboardFlags: " + std::to_string(info.GetBaseboardFlags()) + "\n";
+		moboInfo += "BaseboardType: " + SysInfo::Motherboard::MotherboardInfo::BaseboardTypeToString(
 			info.GetBaseboardType()) + "\n";
-
-		MessageBoxA(nullptr, data.c_str(), "Motherboard", 0);
 	}
+	std::string cpuInfo;
 	if (true) {
 		auto info = SysInfo::CPU::GetCPUInfo();
 		
-		std::string data;
-		data += "ArchitectureString: " + info.GetArchitectureString() + "\n";
-		data += "ProcessorTypeString: " + info.GetProcessorTypeString() + "\n";
-		data += "ProcessorID: " + info.GetProcessorID() + "\n";
-		data += "Cores: " + std::to_string(info.GetCores()) + "\n";
-		data += "Threads: " + std::to_string(info.GetThreads()) + "\n";
-		data += "ProcessorRevision: " + std::to_string(info.GetProcessorRevision()) + "\n";
-		data += "ClockSpeed: " + std::to_string(info.GetClockSpeed()) + "\n";
-		data += "Socket: " + info.GetSocket() + "\n";
-		data += "ProcessorVendorName: " + info.GetProcessorVendorName() + "\n";
-		data += "ProcessorName: " + info.GetProcessorName() + "\n";
-
-		MessageBoxA(nullptr, data.c_str(), "CPU", 0);
+		cpuInfo += "ArchitectureString: " + info.GetArchitectureString() + "\n";
+		cpuInfo += "ProcessorTypeString: " + info.GetProcessorTypeString() + "\n";
+		cpuInfo += "ProcessorID: " + info.GetProcessorID() + "\n";
+		cpuInfo += "Cores: " + std::to_string(info.GetCores()) + "\n";
+		cpuInfo += "Threads: " + std::to_string(info.GetThreads()) + "\n";
+		cpuInfo += "ProcessorRevision: " + std::to_string(info.GetProcessorRevision()) + "\n";
+		cpuInfo += "ClockSpeed: " + std::to_string(info.GetClockSpeed()) + "\n";
+		cpuInfo += "Socket: " + info.GetSocket() + "\n";
+		cpuInfo += "ProcessorVendorName: " + info.GetProcessorVendorName() + "\n";
+		cpuInfo += "ProcessorName: " + info.GetProcessorName() + "\n";
 	}
+	std::vector<std::string> ramInfo;
 	if (true) {
 		auto info = SysInfo::RAM::GetRAMInfo();
-		int i = 0;
 		for (const auto& stick : info.GetSticks()) {
 			std::string data;
 			data += "Name: " + stick.GetName() + "\n";
@@ -95,7 +117,17 @@ int main() {
 			data += "BankName: " + stick.GetBankName() + "\n";
 			data += "DeviceLocator: " + stick.GetDeviceLocator() + "\n";
 
-			MessageBoxA(nullptr, data.c_str(), std::string("Stick " + std::to_string(++i)).c_str(), 0);
+			ramInfo.push_back(data);
 		}
 	}
+
+	MessageBoxA(nullptr, moboInfo.c_str(), "Motherboard", 0);
+	MessageBoxA(nullptr, cpuInfo.c_str(), "CPU", 0);
+	int i = 0;
+	for(const auto& ram : ramInfo)
+		MessageBoxA(nullptr, ram.c_str(), std::string("Stick " + std::to_string(++i)).c_str(), 0);
+
+	i = 0;
+	for (const auto& disk : diskInfo)
+		MessageBoxA(nullptr, disk.c_str(), std::string("Disk " + std::to_string(++i)).c_str(), 0);
 }

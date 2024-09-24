@@ -8,9 +8,9 @@
 namespace SysInfo::RAM {
 #pragma warning(push)
 #pragma warning(disable: 4251)
-    class EXPORT RAMInfo : public StructInit {
+    class EXPORT RAMInfo : public Core::StructInit {
     public:
-        class EXPORT RAMStick {
+        class EXPORT RAMStick : public StructInit {
         public:
             RAMStick(
                 std::string name,
@@ -69,8 +69,6 @@ namespace SysInfo::RAM {
     };
 #pragma warning(pop)
 
-#ifdef SYSINFO_USE_FUTURE
     EXPORT std::future<RAMInfo> GetRAMInfoFuture() noexcept;
-#endif
     EXPORT FUTURE(RAMInfo) GetRAMInfo() noexcept;
 }

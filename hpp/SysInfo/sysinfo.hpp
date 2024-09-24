@@ -6,3 +6,4 @@
 #include <SysInfo/cpu.hpp>
 #include <SysInfo/motherboard.hpp>
 #include <SysInfo/ram.hpp>
+#include <SysInfo/disk.hpp>

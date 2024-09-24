@@ -5,7 +5,6 @@
 #include <intrin.h>
 
 namespace SysInfo::CPU {
-    CPUInfo::CPUInfo() noexcept {}
     CPUInfo::CPUInfo(
         const Architecture& architecture,
         const ProcType& procType,
@@ -103,14 +102,16 @@ namespace SysInfo::CPU {
                 return "UNKNOWN";
         }
     }
-#ifdef SYSINFO_USE_FUTURE
-    EXPORT
-#endif
-    std::future<CPUInfo> GetCPUInfoFuture() noexcept {
+
+    EXPORT std::future<CPUInfo> GetCPUInfoFuture() noexcept {
+#ifdef SYSINFO_USE_CACHE
         static CPUInfo cpuInfo;
+#endif
         return std::async(std::launch::async, []() -> CPUInfo {
+#ifdef SYSINFO_USE_CACHE
             if (cpuInfo.IsInitialized())
                 return cpuInfo;
+#endif
 
             SYSTEM_INFO sysInfo;
             GetSystemInfo(&sysInfo);
@@ -353,7 +354,7 @@ namespace SysInfo::CPU {
 
             auto architecture = CPUInfo::ValueToArchitecture(sysInfo.wProcessorArchitecture);
 
-            COM::COMWrapper com;
+            Core::COM::COMWrapper com;
             com.Connect();
             auto results = com.Query("SELECT * FROM Win32_Processor")[0];
 
@@ -369,7 +370,7 @@ namespace SysInfo::CPU {
                 auto procHeap = GetProcessHeap();
                 auto buffer = static_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*>(
                     HeapAlloc(procHeap, HEAP_ZERO_MEMORY, length)
-                    );
+                );
 
                 if (GetLogicalProcessorInformationEx(
                     LOGICAL_PROCESSOR_RELATIONSHIP::RelationAll,
@@ -381,7 +382,7 @@ namespace SysInfo::CPU {
                     while (offset < length) {
                         auto info = reinterpret_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*>(
                             (BYTE*) buffer + offset
-                            );
+                        );
                         if (!info) break;
 
                         if (info->Relationship == RelationProcessorCore)
@@ -402,9 +403,12 @@ namespace SysInfo::CPU {
             auto socket = results["SocketDesignation"];
             auto procRevision = static_cast<std::uint16_t>(sysInfo.wProcessorRevision);
 
+#ifndef SYSINFO_USE_CACHE
+            auto
+#endif
             cpuInfo = CPUInfo(architecture, procType, procID,
-                Misc::stoui16(cores), Misc::stoui16(threads), procRevision,
-                Misc::stoui32(clockSpeed), socket,
+                Core::Misc::stoui16(cores), Core::Misc::stoui16(threads), procRevision,
+                Core::Misc::stoui32(clockSpeed), socket,
                 vendorName, brandName, cpuFeatures
             );
 

@@ -8,7 +8,7 @@
 
 #pragma comment(lib, "wbemuuid.lib")
 
-namespace SysInfo::COM {
+namespace SysInfo::Core::COM {
     static inline std::int8_t gs_comObjects = 0;
 
     void COMWrapper::SetLastError(const HRESULT& res) noexcept {
@@ -16,7 +16,8 @@ namespace SysInfo::COM {
         m_lastError = UTF8::ToUTF8(_com_error(res).ErrorMessage());
     }
 
-    COMWrapper::COMWrapper() noexcept {
+    COMWrapper::COMWrapper() noexcept
+    {
         HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
 
         if (FAILED(hres)) {
@@ -176,13 +177,9 @@ namespace SysInfo::COM {
                 &i,
                 &propName
             );
-            auto size = wcslen(propName);
-            std::wstring temp(size, 0);
-            temp = propName;
+            std::wstring temp(propName);
 
-            std::string utf8 = UTF8::ToUTF8(temp);
-
-            out.push_back(utf8);
+            out.push_back(UTF8::ToUTF8(temp));
             SysFreeString(propName);
         }
 

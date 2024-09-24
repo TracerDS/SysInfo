@@ -64,16 +64,17 @@ namespace SysInfo::RAM {
     const std::string& RAMStick::GetBankName() const noexcept { return m_bankName; }
     const std::string& RAMStick::GetDeviceLocator() const noexcept { return m_deviceLocator; }
 
-#ifdef SYSINFO_USE_FUTURE
-    EXPORT
-#endif
-    std::future<RAMInfo> GetRAMInfoFuture() noexcept {
+    EXPORT std::future<RAMInfo> GetRAMInfoFuture() noexcept {
+#ifdef SYSINFO_USE_CACHE
         static RAMInfo ramInfo;
+#endif
         return std::async(std::launch::async, [] {
+#ifdef SYSINFO_USE_CACHE
             if (ramInfo.IsInitialized())
                 return ramInfo;
+#endif
 
-            COM::COMWrapper com;
+            Core::COM::COMWrapper com;
             com.Connect();
             auto results = com.Query("SELECT * FROM Win32_PhysicalMemory");
             std::vector<RAMStick> sticks;
@@ -82,12 +83,12 @@ namespace SysInfo::RAM {
                 std::string name = stick["Name"];
                 std::string caption = stick["Caption"];
                 std::string description = stick["Description"];
-                std::uint32_t speed = Misc::stoui32(stick["Speed"]);
-                std::uint32_t clockSpeed = Misc::stoui32(stick["ConfiguredClockSpeed"]);
-                std::uint32_t minVoltage = Misc::stoui32(stick["MinVoltage"]);
-                std::uint32_t configuredVoltage = Misc::stoui32(stick["ConfiguredVoltage"]);
-                std::uint32_t maxVoltage = Misc::stoui32(stick["MaxVoltage"]);
-                std::uint64_t capacity = Misc::stoui64(stick["Capacity"]);
+                std::uint32_t speed = Core::Misc::stoui32(stick["Speed"]);
+                std::uint32_t clockSpeed = Core::Misc::stoui32(stick["ConfiguredClockSpeed"]);
+                std::uint32_t minVoltage = Core::Misc::stoui32(stick["MinVoltage"]);
+                std::uint32_t configuredVoltage = Core::Misc::stoui32(stick["ConfiguredVoltage"]);
+                std::uint32_t maxVoltage = Core::Misc::stoui32(stick["MaxVoltage"]);
+                std::uint64_t capacity = Core::Misc::stoui64(stick["Capacity"]);
                 std::string manufacturer = stick["Manufacturer"];
                 std::string partNumber = stick["PartNumber"];
                 std::string serial = stick["SerialNumber"];
@@ -112,6 +113,9 @@ namespace SysInfo::RAM {
                 );
             }
 
+#ifndef SYSINFO_USE_CACHE
+            auto
+#endif
             ramInfo = RAMInfo(sticks);
             return ramInfo;
         });

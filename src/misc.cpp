@@ -1,7 +1,7 @@
 #include "pch.hpp"
 #include <SysInfo/misc.hpp>
 
-namespace SysInfo::Misc {
+namespace SysInfo::Core::Misc {
     std::int8_t stoi8(const std::string_view& string) noexcept {
         try {
             return std::stoi(string.data());
@@ -91,5 +91,21 @@ namespace SysInfo::Misc {
     }
     std::uint64_t ReadQword(std::uint32_t ptr[2]) {
         return ((std::uint64_t) ptr[0] << 32) | ptr[1];
+    }
+
+    void ltrim(std::string& string) noexcept {
+        try {
+            string.erase(string.begin(), std::find_if(string.begin(), string.end(), [](auto ch) {
+                return !std::isspace(ch);
+            }));
+        } catch (...) {}
+    }
+
+    void rtrim(std::string& string) noexcept {
+        try{
+            string.erase(std::find_if(string.rbegin(), string.rend(), [](auto ch) {
+                return !std::isspace(ch);
+            }).base(), string.end());
+        } catch (...) {}
     }
 }

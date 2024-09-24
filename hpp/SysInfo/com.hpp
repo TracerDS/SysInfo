@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace SysInfo::COM {
+namespace SysInfo::Core::COM {
     class COMWrapper {
         void SetLastError(const HRESULT& res) noexcept;
     public:
@@ -25,15 +25,15 @@ namespace SysInfo::COM {
         std::string GetLastError() const noexcept;
         HRESULT GetLastErrorCode() const noexcept;
     protected:
-        IEnumWbemClassObject* m_enumerator{ nullptr };
-        IWbemLocator* m_locator{ nullptr };
-        IWbemServices* m_services{ nullptr };
+        IEnumWbemClassObject* m_enumerator;
+        IWbemLocator* m_locator;
+        IWbemServices* m_services;
 
-        bool m_isInitInitialized{ false };
-        bool m_isInitialized{ false };
-        bool m_isConnected{ false };
+        bool m_isInitInitialized;
+        bool m_isInitialized;
+        bool m_isConnected;
 
-        std::string m_lastError{};
-        HRESULT m_lastErrorCode{};
+        std::string m_lastError;
+        HRESULT m_lastErrorCode;
     };
 }

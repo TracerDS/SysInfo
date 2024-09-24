@@ -7,7 +7,7 @@
 namespace SysInfo::Motherboard {
 #pragma warning(push)
 #pragma warning(disable: 4251)
-    class EXPORT MotherboardInfo : public StructInit {
+    class EXPORT MotherboardInfo : public Core::StructInit {
     public:
         struct BIOSCharacteristics {
             std::uint8_t _reserved : 2;
@@ -121,6 +121,7 @@ namespace SysInfo::Motherboard {
             const std::pair<std::uint8_t, std::uint8_t>& ecfVesion,
             const std::uint16_t& biosAddress,
             const std::uint32_t& biosRomSize,
+            const std::string& uuid,
             const std::string& vendor,
             const std::string& biosVersion,
             const std::string& releaseDate,
@@ -141,6 +142,7 @@ namespace SysInfo::Motherboard {
         // ECF - Embedded Controller Firmware
         const std::pair<std::uint8_t, std::uint8_t>& GetECFVersion() const noexcept;
 
+        const std::string& GetUUID() const noexcept;
         const std::string& GetVendor() const noexcept;
         const std::string& GetBiosVersion() const noexcept;
         const std::string& GetReleaseDate() const noexcept;
@@ -154,29 +156,28 @@ namespace SysInfo::Motherboard {
         const BaseboardFlags& GetBaseboardFlags() const noexcept;
         const BaseboardType& GetBaseboardType() const noexcept;
     protected:
-        BIOSCharacteristics m_biosChars;
-        BIOSCharacteristicsExt m_biosCharsExt;
-        std::pair<std::uint8_t, std::uint8_t> m_systemBiosVersion;
-        std::pair<std::uint8_t, std::uint8_t> m_ecfVersion;
-        std::uint16_t m_biosAddress;
-        std::uint32_t m_romSize;
-        std::string m_vendor;
-        std::string m_biosVersion;
-        std::string m_releaseDate;
-        std::string m_manufacturer;
-        std::string m_productName;
-        std::string m_version;
-        std::string m_serial;
-        WakeUpType m_wakeUpType;
-        std::string m_SKUNumber;
-        std::string m_family;
-        BaseboardFlags m_featureFlags;
-        BaseboardType m_boardType;
+        BIOSCharacteristics m_biosChars{};
+        BIOSCharacteristicsExt m_biosCharsExt{};
+        std::pair<std::uint8_t, std::uint8_t> m_systemBiosVersion{};
+        std::pair<std::uint8_t, std::uint8_t> m_ecfVersion{};
+        std::uint16_t m_biosAddress{};
+        std::uint32_t m_romSize{};
+        std::string m_uuid{};
+        std::string m_vendor{};
+        std::string m_biosVersion{};
+        std::string m_releaseDate{};
+        std::string m_manufacturer{};
+        std::string m_productName{};
+        std::string m_version{};
+        std::string m_serial{};
+        WakeUpType m_wakeUpType{};
+        std::string m_SKUNumber{};
+        std::string m_family{};
+        BaseboardFlags m_featureFlags{};
+        BaseboardType m_boardType{};
     };
 #pragma warning(pop)
 
-#ifdef SYSINFO_USE_FUTURE
     EXPORT std::future<MotherboardInfo> GetMotherboardInfoFuture() noexcept;
-#endif
     EXPORT FUTURE(MotherboardInfo) GetMotherboardInfo() noexcept;
 }

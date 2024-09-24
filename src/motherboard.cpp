@@ -1,10 +1,9 @@
 #include "pch.hpp"
 #include <SysInfo/motherboard.hpp>
 #include <SysInfo/misc.hpp>
+#include <format>
 
 namespace SysInfo::Motherboard {
-#pragma warning(push)
-#pragma warning(disable: 4200)
     struct RawSMBIOSData {
         BYTE Used20CallingMethod;
         BYTE MajorVersion;
@@ -13,7 +12,7 @@ namespace SysInfo::Motherboard {
         DWORD Length;
         BYTE SMBIOSTableData[0xBB3];
     };
-#pragma warning(pop)
+
     using BIOSCharacteristics = MotherboardInfo::BIOSCharacteristics;
     using BIOSCharacteristicsExt = MotherboardInfo::BIOSCharacteristicsExt;
     using WakeUpType = MotherboardInfo::WakeUpType;
@@ -210,6 +209,7 @@ namespace SysInfo::Motherboard {
         const std::pair<std::uint8_t, std::uint8_t>& ecfVersion,
         const std::uint16_t& biosAddress,
         const std::uint32_t& biosRomSize,
+        const std::string& uuid,
         const std::string& vendor,
         const std::string& biosVersion,
         const std::string& releaseDate,
@@ -229,6 +229,7 @@ namespace SysInfo::Motherboard {
         m_ecfVersion(ecfVersion),
         m_biosAddress(biosAddress),
         m_romSize(biosRomSize),
+        m_uuid(uuid),
         m_vendor(vendor),
         m_biosVersion(biosVersion),
         m_releaseDate(releaseDate),
@@ -254,6 +255,7 @@ namespace SysInfo::Motherboard {
     const std::pair<std::uint8_t, std::uint8_t>& MotherboardInfo::GetECFVersion()
         const noexcept { return m_ecfVersion; }
 
+    const std::string& MotherboardInfo::GetUUID() const noexcept { return m_uuid; }
     const std::string& MotherboardInfo::GetVendor() const noexcept { return m_vendor; }
     const std::string& MotherboardInfo::GetBiosVersion() const noexcept { return m_biosVersion; }
     const std::string& MotherboardInfo::GetReleaseDate() const noexcept { return m_releaseDate; }
@@ -269,21 +271,22 @@ namespace SysInfo::Motherboard {
     const BaseboardType& MotherboardInfo::GetBaseboardType()
         const noexcept { return m_boardType; }
 
-#ifdef SYSINFO_USE_FUTURE
-    EXPORT
-#endif
-    std::future<MotherboardInfo> GetMotherboardInfoFuture() noexcept {
+    EXPORT std::future<MotherboardInfo> GetMotherboardInfoFuture() noexcept {
+#ifdef SYSINFO_USE_CACHE
         static MotherboardInfo moboInfo;
+#endif
         return std::async(std::launch::async, []() -> MotherboardInfo {
+#ifdef SYSINFO_USE_CACHE
             if (moboInfo.IsInitialized())
                 return moboInfo;
+#endif
 
             auto smBiosDataSize = GetSystemFirmwareTable('RSMB', 0, nullptr, 0);
 
             auto procHeap = GetProcessHeap();
             auto smBiosData = static_cast<RawSMBIOSData*>(
                 HeapAlloc(procHeap, HEAP_ZERO_MEMORY, smBiosDataSize)
-                );
+            );
             if (!smBiosData)
                 return {};
 
@@ -292,10 +295,15 @@ namespace SysInfo::Motherboard {
                 HeapFree(procHeap, 0, smBiosData);
                 return {};
             }
+            if (bytesWritten < 0x1A) {
+                HeapFree(procHeap, 0, smBiosData);
+                return {};
+            }
 
             auto& data = smBiosData->SMBIOSTableData;
 
             // Type 0
+
             std::string vendorName;
             std::string biosVersion;
             std::string biosReleaseDate;
@@ -312,22 +320,22 @@ namespace SysInfo::Motherboard {
             {
                 std::uint8_t type = data[smbiosIndex++];
                 std::uint8_t length = data[smbiosIndex++];
-                std::uint16_t handle = Misc::ReadWord(data + smbiosIndex);
+                std::uint16_t handle = Core::Misc::ReadWord(data + smbiosIndex);
                 smbiosIndex += 2;
 
                 std::uint8_t vendorIndex = data[smbiosIndex++] - 1;
                 std::uint8_t biosIndex = data[smbiosIndex++] - 1;
-                biosAddress = Misc::ReadWord(data + smbiosIndex);
+                biosAddress = Core::Misc::ReadWord(data + smbiosIndex);
                 smbiosIndex += 2;
 
                 std::uint8_t biosDateIndex = data[smbiosIndex++] - 1;
                 std::uint8_t biosRomSizeTemp = data[smbiosIndex++];
 
-                biosCharacteristics = Misc::ReadQword(
+                biosCharacteristics = Core::Misc::ReadQword(
                     data + smbiosIndex
                 );
                 smbiosIndex += 8;
-                biosCharacteristicsExt = Misc::ReadWord(
+                biosCharacteristicsExt = Core::Misc::ReadWord(
                     data + smbiosIndex
                 );
                 smbiosIndex += 2;
@@ -339,7 +347,7 @@ namespace SysInfo::Motherboard {
 
                 ecfVersion.first = data[smbiosIndex++];
                 ecfVersion.second = data[smbiosIndex++];
-                auto biosRomSizeExt = Misc::ReadWord(data + smbiosIndex);
+                auto biosRomSizeExt = Core::Misc::ReadWord(data + smbiosIndex);
                 smbiosIndex += 2;
 
                 if (biosRomSizeTemp == 0xFF) {
@@ -372,18 +380,20 @@ namespace SysInfo::Motherboard {
                 smbiosIndex += static_cast<std::uint32_t>(index) + 1;
             }
 
+            // Type 1
+
             std::string manufacturer;
             std::string productName;
             std::string version;
             std::string serial;
-            std::string uuid(16, '\0');
+            std::string uuid(35, 0);
             WakeUpType wakeUpType;
             std::string skuNumber;
             std::string pcFamily;
             {
                 std::uint8_t type = data[smbiosIndex++];
                 std::uint8_t length = data[smbiosIndex++];
-                std::uint16_t handle = Misc::ReadWord(data + smbiosIndex);
+                std::uint16_t handle = Core::Misc::ReadWord(data + smbiosIndex);
                 smbiosIndex += 2;
 
                 std::uint8_t manufacturerIndex = data[smbiosIndex++] - 1;
@@ -391,9 +401,21 @@ namespace SysInfo::Motherboard {
                 std::uint8_t versionIndex = data[smbiosIndex++] - 1;
                 std::uint8_t serialIndex = data[smbiosIndex++] - 1;
 
-                for (auto i = 0; i < 16; i++) {
-                    uuid[i] = data[smbiosIndex++];
-                }
+                uuid = std::format(
+                    "{:02X}{:02X}{:02X}{:02X}-"
+                    "{:02X}{:02X}{:02X}{:02X}-"
+                    "{:02X}{:02X}{:02X}{:02X}-"
+                    "{:02X}{:02X}{:02X}{:02X}",
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++],
+                    data[smbiosIndex++], data[smbiosIndex++]
+                );
+                
                 switch (data[smbiosIndex++]) {
                     case 0:
                         wakeUpType = WakeUpType::RESERVED;
@@ -458,7 +480,7 @@ namespace SysInfo::Motherboard {
             {
                 std::uint8_t type = data[smbiosIndex++];
                 std::uint8_t length = data[smbiosIndex++];
-                std::uint16_t handle = Misc::ReadWord(data + smbiosIndex);
+                std::uint16_t handle = Core::Misc::ReadWord(data + smbiosIndex);
                 smbiosIndex += 2;
 
                 std::uint8_t manufacturerIndex = data[smbiosIndex++] - 1;
@@ -468,7 +490,7 @@ namespace SysInfo::Motherboard {
                 std::uint8_t assetIndex = data[smbiosIndex++] - 1;
                 featureFlags = data[smbiosIndex++];
                 std::uint8_t chassisIndex = data[smbiosIndex++] - 1;
-                std::uint16_t chassisHandle = Misc::ReadWord(data + smbiosIndex);
+                std::uint16_t chassisHandle = Core::Misc::ReadWord(data + smbiosIndex);
                 smbiosIndex += 2;
                 switch (data[smbiosIndex++]) {
                     case 1:
@@ -516,9 +538,12 @@ namespace SysInfo::Motherboard {
 
             HeapFree(procHeap, 0, smBiosData);
 
+#ifndef SYSINFO_USE_CACHE
+            auto
+#endif
             moboInfo = MotherboardInfo(
                 biosCharacteristics, biosCharacteristicsExt, systemBiosVersion,
-                ecfVersion, biosAddress, biosRomSize,
+                ecfVersion, biosAddress, biosRomSize, uuid,
                 vendorName, biosVersion, biosReleaseDate, manufacturer,
                 productName, version, serial, wakeUpType, skuNumber, pcFamily,
 

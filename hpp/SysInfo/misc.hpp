@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <array>
 
-namespace SysInfo::Misc {
+namespace SysInfo::Core::Misc {
     template <typename... T>
     constexpr auto make_array(T&&... values)
         -> std::array<
@@ -137,4 +137,7 @@ namespace SysInfo::Misc {
     std::uint64_t ReadQword(std::uint8_t ptr[8]);
     std::uint64_t ReadQword(std::uint16_t ptr[4]);
     std::uint64_t ReadQword(std::uint32_t ptr[2]);
+
+    void ltrim(std::string& string) noexcept;
+    void rtrim(std::string& string) noexcept;
 }
