@@ -43,7 +43,48 @@ BOOL WINAPI DllMain (
 }
 
 int main() {
-	SysInfo::OS::GetOSInfo();
+	SetConsoleOutputCP(CP_UTF8);
+	auto info = SysInfo::OS::GetOSInfo();
+	std::cout << "Version: " << info.GetVersion() << std::endl;
+	std::cout << "Users: " << std::endl;
+	for (const auto& user : info.GetUsers()) {
+		std::cout << "  - Name: " << user.GetName() << std::endl;
+		std::cout << "  - FullName: " << user.GetFullName() << std::endl;
+		std::cout << "  - PasswordAge: " << user.GetPasswordAge() << std::endl;
+		std::cout << "  - Privileges: " << user.PrivilegeLevelToString(user.GetPrivileges()) << std::endl;
+		std::cout << "  - HomeDir: " << user.GetHomeDir() << std::endl;
+		std::cout << "  - ScriptPath: " << user.GetScriptPath() << std::endl;
+		std::cout << "  - Comment: " << user.GetComment() << std::endl;
+		std::cout << "  - UserComment: " << user.GetUserComment() << std::endl;
+		std::cout << "  - Flags: " << user.GetFlags() << std::endl;
+		std::cout << "  - AuthFlags: " << user.GetAuthFlags() << std::endl;
+		std::cout << "  - Params: " << user.GetParams() << std::endl;
+		std::cout << "  - Workstations: " << std::endl;
+		for (const auto& station : user.GetWorkstations()) {
+			if (station.empty()) continue;
+			std::cout << "    - " << station << std::endl;
+		}
+		std::cout << "  - LastLogon: " << user.GetLastLogon() << std::endl;
+		std::cout << "  - LastLogoff: " << user.GetLastLogoff() << std::endl;
+		std::cout << "  - ExpireTime: " << user.GetExpireTime() << std::endl;
+		std::cout << "  - MaxStorage: " << user.GetMaxStorage() << std::endl;
+		std::cout << "  - UnitsPerWeek: " << user.GetUnitsPerWeek() << std::endl;
+		//std::cout << "  - TimeRestriction: " << user.GetTimeRestriction() << std::endl;
+		std::cout << "  - BadPasswordCount: " << user.GetBadPasswordCount() << std::endl;
+		std::cout << "  - LogonsNumber: " << user.GetLogonsNumber() << std::endl;
+		std::cout << "  - LogonServer: " << user.GetLogonServer() << std::endl;
+		std::cout << "  - CountryCode: " << user.GetCountryCode() << std::endl;
+		std::cout << "  - CodePage: " << user.GetCodePage() << std::endl;
+		std::cout << "  - UserID: " << user.GetUserID() << std::endl;
+		std::cout << "  - PrimaryGroupID: " << user.GetPrimaryGroupID() << std::endl;
+		std::cout << "  - Profile: " << user.GetProfile() << std::endl;
+		std::cout << "  - HomeDirDrive: " << user.GetHomeDirDrive() << std::endl;
+		std::cout << "  - PasswordExpireInfo: " << user.GetPasswordExpireInfo() << std::endl;
+		std::cout << "  - UserGroups: " << std::endl;
+		for (const auto& group : user.GetUserGroups()) {
+			std::cout << "    - " << group << std::endl;
+		}
+	}
 	return 1;
 	std::vector<std::string> diskInfo;
 	if (true) {

@@ -2,7 +2,10 @@
 #include <SysInfo/cpu.hpp>
 #include <SysInfo/misc.hpp>
 #include <SysInfo/com.hpp>
+
 #include <intrin.h>
+
+#pragma intrinsic(__rdtsc)
 
 namespace SysInfo::CPU {
     CPUInfo::CPUInfo(
@@ -16,7 +19,8 @@ namespace SysInfo::CPU {
         const std::string& socket,
         const std::string& vendor,
         const std::string& brand,
-        const std::unordered_map<std::string, bool>& features
+        const std::unordered_map<std::string, bool>& features,
+        const std::uint64_t& procTimestamp
     ) noexcept :
         m_architecture(architecture),
         m_procType(procType),
@@ -28,7 +32,8 @@ namespace SysInfo::CPU {
         m_socket(socket),
         m_vendor(vendor),
         m_brand(brand),
-        m_features(features)
+        m_features(features),
+        m_procTimestamp(procTimestamp)
     {
         m_initialized = true;
     }
@@ -45,6 +50,9 @@ namespace SysInfo::CPU {
     const std::string& CPUInfo::GetProcessorName() const noexcept { return m_brand; }
     const std::unordered_map<std::string, bool>& CPUInfo::GetFeatures() const noexcept {
         return m_features;
+    }
+    const std::uint64_t& CPUInfo::GetProcessorTimestamp() const noexcept {
+        return m_procTimestamp;
     }
 
     std::string CPUInfo::GetArchitectureString() const noexcept {
@@ -403,13 +411,15 @@ namespace SysInfo::CPU {
             auto socket = results["SocketDesignation"];
             auto procRevision = static_cast<std::uint16_t>(sysInfo.wProcessorRevision);
 
+            auto procTimestamp = __rdtsc();
+
 #ifndef SYSINFO_USE_CACHE
             auto
 #endif
             cpuInfo = CPUInfo(architecture, procType, procID,
                 Core::Misc::stoui16(cores), Core::Misc::stoui16(threads), procRevision,
                 Core::Misc::stoui32(clockSpeed), socket,
-                vendorName, brandName, cpuFeatures
+                vendorName, brandName, cpuFeatures, procTimestamp
             );
 
             return cpuInfo;

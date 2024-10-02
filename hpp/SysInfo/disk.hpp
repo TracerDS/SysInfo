@@ -41,14 +41,14 @@ namespace SysInfo::Disk {
 
             static std::string DiskTypeToString(const Type& type) noexcept;
         protected:
-            std::string m_letter;
-            std::string m_volumeName;
-            std::string m_fileSystem;
-            std::string m_serial;
-            Type m_type;
-            std::uint64_t m_freeBytes;
-            std::uint64_t m_totalBytes;
-            std::uint64_t m_freeBytesAvailable;
+            const std::string m_letter;
+            const std::string m_volumeName;
+            const std::string m_fileSystem;
+            const std::string m_serial;
+            const Type m_type;
+            const std::uint64_t m_freeBytes;
+            const std::uint64_t m_totalBytes;
+            const std::uint64_t m_freeBytesAvailable;
         };
 
         DiskInfo (
@@ -57,7 +57,7 @@ namespace SysInfo::Disk {
 
         const std::vector<Disk>& GetDisks() const noexcept;
     protected:
-        std::vector<Disk> m_disks;
+        const std::vector<Disk> m_disks;
     };
 #pragma warning(pop)
 

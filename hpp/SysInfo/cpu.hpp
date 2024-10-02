@@ -36,7 +36,8 @@ namespace SysInfo::CPU {
             const std::string& socket,
             const std::string& vendor,
             const std::string& brand,
-            const std::unordered_map<std::string, bool>& features
+            const std::unordered_map<std::string, bool>& features,
+            const std::uint64_t& procTimestamp
         ) noexcept;
 
         const Architecture& GetArchitecture() const noexcept;
@@ -50,6 +51,7 @@ namespace SysInfo::CPU {
         const std::string& GetProcessorVendorName() const noexcept;
         const std::string& GetProcessorName() const noexcept;
         const std::unordered_map<std::string, bool>& GetFeatures() const noexcept;
+        const std::uint64_t& GetProcessorTimestamp() const noexcept;
 
         std::string GetArchitectureString() const noexcept;
         std::string GetProcessorTypeString() const noexcept;
@@ -59,17 +61,18 @@ namespace SysInfo::CPU {
         static std::string ProcessorTypeToString(const ProcType& type) noexcept;
 
     protected:
-        Architecture m_architecture;
-        ProcType m_procType;
-        std::string m_procID;
-        std::uint16_t m_cores;
-        std::uint16_t m_threads;
-        std::uint16_t m_procRevision;
-        std::uint32_t m_clockSpeed;
-        std::string m_socket;
-        std::string m_vendor;
-        std::string m_brand;
-        std::unordered_map<std::string, bool> m_features;
+        const Architecture m_architecture;
+        const ProcType m_procType;
+        const std::string m_procID;
+        const std::uint16_t m_cores;
+        const std::uint16_t m_threads;
+        const std::uint16_t m_procRevision;
+        const std::uint32_t m_clockSpeed;
+        const std::string m_socket;
+        const std::string m_vendor;
+        const std::string m_brand;
+        const std::unordered_map<std::string, bool> m_features;
+        const std::uint64_t m_procTimestamp;
     };
 #pragma warning(pop)
 

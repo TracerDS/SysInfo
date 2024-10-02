@@ -18,20 +18,20 @@ namespace SysInfo::RAM {
     }
 
     RAMStick::RAMStick(
-        std::string name,
-        std::string caption,
-        std::string description,
-        std::uint32_t speed,
-        std::uint32_t clockSpeed,
-        std::uint32_t minVoltage,
-        std::uint32_t configuredVoltage,
-        std::uint32_t maxVoltage,
-        std::uint64_t capacity,
-        std::string manufacturer,
-        std::string partNumber,
-        std::string serial,
-        std::string bankName,
-        std::string deviceLocator
+        const std::string& name,
+        const std::string& caption,
+        const std::string& description,
+        const std::uint32_t& speed,
+        const std::uint32_t& clockSpeed,
+        const std::uint32_t& minVoltage,
+        const std::uint32_t& configuredVoltage,
+        const std::uint32_t& maxVoltage,
+        const std::uint64_t& capacity,
+        const std::string& manufacturer,
+        const std::string& partNumber,
+        const std::string& serial,
+        const std::string& bankName,
+        const std::string& deviceLocator
     ) noexcept :
         m_name(name),
         m_caption(caption),
